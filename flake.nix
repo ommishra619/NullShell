@@ -1,5 +1,5 @@
 {
-  description = "RedNix - offensive security toolkit";
+  description = "Nullshell - offensive security toolkit";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -58,7 +58,7 @@
           };
         }
       );
-      rednixLib = import ./lib.nix { inherit (nixpkgs) lib; };
+      nullshellLib = import ./lib.nix { inherit (nixpkgs) lib; };
       skipFor =
         system: if pkgs.${system}.stdenv.hostPlatform.isDarwin then import ./darwin-skip.nix else [ ];
       # One Linux guest config, one runner per host system. On darwin hosts
@@ -73,7 +73,9 @@
         nixpkgs.lib.nixosSystem {
           system = guestSystem;
           specialArgs = {
-            rednixPackages = nixpkgs.lib.flatten (builtins.attrValues self.packagesByCategory.${guestSystem});
+            nullshellPackages = nixpkgs.lib.flatten (
+              builtins.attrValues self.packagesByCategory.${guestSystem}
+            );
           };
           modules = [
             inputs.microvm.nixosModules.microvm
@@ -123,7 +125,7 @@
         system:
         let
           inherit (nixpkgs.lib) filter mapAttrs;
-          isAvailable = rednixLib.mkIsAvailable {
+          isAvailable = nullshellLib.mkIsAvailable {
             hostPlatform = pkgs.${system}.stdenv.hostPlatform;
             skip = skipFor system;
           };
@@ -155,7 +157,7 @@
             if prior == null || prior.drvPath == p.drvPath then
               acc // { ${key} = p; }
             else
-              warn "rednix: pname collision on \"${key}\" in the flat packages output — keeping ${prior.drvPath}, dropping ${p.drvPath}; disambiguate in packages.nix" acc
+              warn "nullshell: pname collision on \"${key}\" in the flat packages output — keeping ${prior.drvPath}, dropping ${p.drvPath}; disambiguate in packages.nix" acc
           ) { } packagesList;
         in
         named
@@ -163,7 +165,7 @@
           # `nix build .#` aggregate: forces every available package to build,
           # so it doubles as a smoke test for the whole package list.
           default = pkgs.${system}.buildEnv {
-            name = "rednix-toolkit";
+            name = "nullshell-toolkit";
             paths = packagesList;
             ignoreCollisions = true;
           };
@@ -204,7 +206,7 @@
           entriesFor =
             system:
             let
-              dropReason = rednixLib.mkDropReason {
+              dropReason = nullshellLib.mkDropReason {
                 hostPlatform = pkgs.${system}.stdenv.hostPlatform;
                 skip = skipFor system;
               };
@@ -246,22 +248,22 @@
           pkgs.x86_64-linux.runCommand "no-silent-drops" { } "touch $out"
         else
           throw ''
-            rednix: dropped from every system they're declared for, at least
+            nullshell: dropped from every system they're declared for, at least
             partly by the silent tryEval clause (unfree allowlist miss or
             upstream eval breakage?): ${concatStringsSep ", " silent}
           '';
 
       nixosConfigurations = genLinuxSystems (hostSystem: mkMicrovm hostSystem [ ]);
 
-      # The RedNix guest as a reusable NixOS module, for downstreams that want
+      # The Nullshell guest as a reusable NixOS module, for downstreams that want
       # to embed the microVM in their own microvm host config. Contract: the
       # importing nixosSystem must (1) also import
-      # inputs.microvm.nixosModules.microvm, and (2) supply `rednixPackages`,
+      # inputs.microvm.nixosModules.microvm, and (2) supply `nullshellPackages`,
       # a flat list of derivations, e.g.
-      # `lib.flatten (builtins.attrValues rednix.packagesByCategory.<system>)`,
+      # `lib.flatten (builtins.attrValues nullshell.packagesByCategory.<system>)`,
       # via specialArgs. See mkMicrovm above for the reference wiring.
       # `import` (not a bare path) so the flake `nixosModules` schema check
       # sees the module function directly.
-      nixosModules.rednix = import ./microvm.nix;
+      nixosModules.nullshell = import ./microvm.nix;
     };
 }

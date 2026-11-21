@@ -14,7 +14,7 @@ let
     pkgs.mkShell {
       inherit name;
       packages = drvs;
-      shellHook = ''echo "rednix · ${name} · ${toString (builtins.length drvs)} tools"'';
+      shellHook = ''echo "nullshell · ${name} · ${toString (builtins.length drvs)} tools"'';
     };
   shells = builtins.mapAttrs mkCatShell packagesByCategory;
 in

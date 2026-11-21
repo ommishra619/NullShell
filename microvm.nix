@@ -1,8 +1,8 @@
-# Guest NixOS configuration for the RedNix microVM (microvm.nix module).
+# Guest NixOS configuration for the Nullshell microVM (microvm.nix module).
 # Exposed as packages.<system>.microvm — `nix run .#microvm`.
-{ rednixPackages, ... }: {
+{ nullshellPackages, ... }: {
   networking = {
-    hostName = "RedNix";
+    hostName = "Nullshell";
     firewall = {
       enable = true;
       allowPing = true;
@@ -13,7 +13,7 @@
     };
   };
 
-  environment.systemPackages = rednixPackages;
+  environment.systemPackages = nullshellPackages;
 
   nix.settings.extra-experimental-features = [
     "nix-command"
@@ -23,18 +23,18 @@
   nixpkgs.config = import ./nixpkgs-config.nix { };
 
   services = {
-    getty.autologinUser = "rednix";
+    getty.autologinUser = "nullshell";
     openssh = {
       enable = true;
       settings.X11Forwarding = true;
     };
   };
 
-  users.users.rednix = {
+  users.users.nullshell = {
     isNormalUser = true;
     uid = 1000;
-    description = "RedNix microVM user";
-    initialPassword = "rednix";
+    description = "Nullshell microVM user";
+    initialPassword = "nullshell";
     extraGroups = [ "wheel" ];
   };
 
@@ -55,12 +55,12 @@
         mountPoint = "/nix/.ro-store";
       }
     ];
-    # Persistent /home/rednix on an auto-created ext4 image;
+    # Persistent /home/nullshell on an auto-created ext4 image;
     # the rest of the guest stays stateless (ro-store + tmpfs)
     volumes = [
       {
-        image = "rednix-home.img";
-        mountPoint = "/home/rednix";
+        image = "nullshell-home.img";
+        mountPoint = "/home/nullshell";
         # Sparse (truncate + mkfs.ext4), so the declared size costs ext4
         # metadata, not 64 GiB upfront.
         size = 65536;
